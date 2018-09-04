@@ -1,0 +1,7 @@
+# CMake generated files
+*.cmake
+CMakeCache.txt
+CMakeFiles/
+
+# We use CMake for this repo so no makefile needed
+Makefile
