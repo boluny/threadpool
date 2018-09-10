@@ -1,6 +1,9 @@
+#ifndef BLOCK_QUEUE_H
+#define BLOCK_QUEUE_H
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 
 /// A bounded thread-safe blocking queue
 template <typename T>
@@ -33,6 +36,24 @@ public:
         return val;
     }
 
+    T try_pop()
+    {
+        using namespace std::chrono_literals;
+        std::unique_lock<std::mutex> lock(mutex_);
+        // TODO: default wait time is 500ms, can make it configurable later
+        if (cv_can_pop_.wait_for(lock, 500ms, [this]() {return !queue_.empty();}))
+        {
+            auto val = std::move(queue_.front());
+            queue_.pop();
+            cv_can_push_.notify_one();
+            return val;
+        }
+        else 
+        {
+            return nullptr;
+        }
+    }
+
 
 private:
     std::mutex mutex_;
@@ -42,4 +63,5 @@ private:
     std::size_t max_size_;
 
 };
+#endif //BLOCK_QUEUE_H
 
